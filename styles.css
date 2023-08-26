@@ -1,0 +1,30 @@
+/* styles.css */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+/* Your custom CSS can go here. */
+.board-container {
+	@apply flex flex-col justify-center items-center m-0 bg-gradient-to-br from-blue-900 via-indigo-700 to-sky-400 min-h-screen;
+}
+.toolbar-container {
+	@apply py-5 flex items-center m-4 gap-5 bg-white w-[1200px] rounded-xl justify-around select-none;
+}
+.tools-item {
+	@apply flex flex-col justify-center items-center gap-2 font-bold;
+}
+
+canvas {
+	@apply rounded-xl shadow-xl;
+}
+.slider-container {
+	width: 80px;
+	cursor: pointer;
+	max-height: 60px;
+}
+.size-slider {
+	transform: rotate(270deg);
+	z-index: 99;
+	position: relative;
+	right: 40px;
+	bottom: 45px;
+}
