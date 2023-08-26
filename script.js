@@ -75,10 +75,13 @@ function draw(e) {
 		case "rectangle":
 			if (strokeStyle === "white")
 				strokeStyle = document.getElementById("colorsButton").value;
-
 			if (isRectangleDrawing) {
 				updateRectangle(e);
 			}
+			break;
+		case "eraser":
+			strokeStyle = "white";
+			drawFree(e);
 			break;
 	}
 }
@@ -157,16 +160,6 @@ function redo() {
 	}
 }
 
-function toggleEraser() {
-	isEraserMode = !isEraserMode; // Toggle the eraser mode
-	if (isEraserMode) {
-		strokeStyle = "white"; // Set the strokeStyle to white when in eraser mode
-		drawMode = "free";
-	} else {
-		strokeStyle = document.getElementById("colorsButton").value; // Set it back to the selected color
-	}
-}
-
 function colorChange(e) {
 	const selectedColor = e.target.value;
 	strokeStyle = selectedColor;
@@ -238,6 +231,7 @@ function updateRectangle(e) {
 const clearButton = document.getElementById("clearButton");
 const undoButton = document.getElementById("undoButton");
 const redoButton = document.getElementById("redoButton");
+const pencilButton = document.getElementById("pencilButton");
 const eraserButton = document.getElementById("eraserButton");
 const colorsButton = document.getElementById("colorsButton");
 const circleButton = document.getElementById("circleButton");
@@ -247,7 +241,12 @@ const rectangleButton = document.getElementById("rectangleButton");
 clearButton.addEventListener("click", clearCanvas);
 undoButton.addEventListener("click", undo);
 redoButton.addEventListener("click", redo);
-eraserButton.addEventListener("click", toggleEraser);
+pencilButton.addEventListener("click", () => {
+	drawMode = "free";
+});
+eraserButton.addEventListener("click", () => {
+	drawMode = "eraser";
+});
 colorsButton.addEventListener("input", (e) => colorChange(e));
 circleButton.addEventListener("click", () => {
 	drawMode = "circle";
@@ -255,4 +254,5 @@ circleButton.addEventListener("click", () => {
 rectangleButton.addEventListener("click", () => {
 	drawMode = "rectangle";
 });
+
 sizeSlider.addEventListener("input", (e) => sizeChange(e));
