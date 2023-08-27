@@ -104,8 +104,12 @@ function saveDrawingState() {
 	}
 
 	drawingHistory.push(imageData);
-	historyIndex++;
-	console.log(historyIndex);
+
+	if (historyIndex === -1) {
+		historyIndex = 0; // Set historyIndex to 0 if this is the first saved state
+	} else {
+		historyIndex++;
+	}
 }
 
 function clearCanvas() {
@@ -129,14 +133,16 @@ function clearCanvas() {
 
 function restoreDrawingState() {
 	// Restore the drawing state from history
+
 	if (historyIndex >= 0) {
 		const previousState = drawingHistory[historyIndex];
 		ctx.putImageData(previousState, 0, 0);
+	} else if (historyIndex === -1) {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
 	}
 }
 
 function undo() {
-	console.log(historyIndex);
 	if (historyIndex >= 0) {
 		// Move the current state to redo history
 		redoHistory.push(drawingHistory[historyIndex]);
