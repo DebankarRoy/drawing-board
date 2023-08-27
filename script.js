@@ -1,6 +1,10 @@
 const canvas = document.getElementById("drawingCanvas");
 const ctx = canvas.getContext("2d");
 
+// Set the canvas background color to white
+ctx.fillStyle = "white";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 // Declaring default states
 let drawing = false;
 let lastX = 0;
@@ -9,8 +13,6 @@ let strokeStyle = "#000";
 let lineWidth = 2;
 let isEraserMode = false;
 let drawMode = "free";
-
-// Flag to check the drawing mode
 let isCircleDrawing = false;
 let isRectangleDrawing = false;
 
@@ -22,10 +24,10 @@ let radius = 0;
 // Arrays to store drawing history and redo history
 const drawingHistory = [];
 const redoHistory = [];
-const clearHistory = []; // Separate history for clear actions
+const clearHistory = [];
 let historyIndex = -1;
 
-// Set up event listeners
+// Set up event listeners for canvas
 canvas.addEventListener("mousedown", (e) => {
 	drawing = true;
 	[lastX, lastY] = [
@@ -43,7 +45,6 @@ canvas.addEventListener("mousedown", (e) => {
 		startY = lastY;
 	}
 });
-
 canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("mouseup", () => {
 	if (drawing) {
@@ -59,6 +60,7 @@ canvas.addEventListener("mouseup", () => {
 	}
 });
 
+// Function to handle all the drawings
 function draw(e) {
 	if (!drawing) return;
 	switch (drawMode) {
@@ -83,6 +85,12 @@ function draw(e) {
 			strokeStyle = "white";
 			drawFree(e);
 			break;
+		case "line":
+			drawLine(e);
+			break;
+		case "triangle":
+			drawTriangle(e);
+			break;
 	}
 }
 
@@ -100,21 +108,16 @@ function saveDrawingState() {
 }
 
 function clearCanvas() {
+	// Fill the canvas with white to clear the background
+	ctx.fillStyle = "white";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 	// Clone the canvas data before clearing
 	const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	clearHistory.push(imageData);
 
-	// Clear only the circle, not the entire canvas
-	if (isCircleDrawing) {
-		ctx.clearRect(
-			centerX - radius - lineWidth,
-			centerY - radius - lineWidth,
-			radius * 2 + lineWidth * 2,
-			radius * 2 + lineWidth * 2
-		);
-	} else {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-	}
+	// Additional code to clear specific shapes if needed
+	// ...
 
 	// Redraw the saved drawings
 	restoreDrawingState();
@@ -178,7 +181,40 @@ function drawFree(e) {
 	ctx.lineTo(lastX, lastY);
 	ctx.stroke();
 }
+function drawLine(e) {
+	if (!drawing) return;
+	ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+	restoreDrawingState(); // Restore the saved drawings
 
+	ctx.beginPath();
+	ctx.strokeStyle = strokeStyle;
+	ctx.lineWidth = lineWidth;
+	ctx.lineCap = "round";
+	ctx.moveTo(lastX, lastY);
+
+	// Check if the Shift key is pressed
+	const isShiftPressed = e.shiftKey;
+
+	if (isShiftPressed) {
+		// Calculate the change in X and Y from the starting point
+		const dx = Math.abs(e.clientX - canvas.offsetLeft - lastX);
+		const dy = Math.abs(e.clientY - canvas.offsetTop - lastY);
+
+		// Constrain the line to be diagonal (45 degrees) or horizontal/vertical
+		if (dx > dy) {
+			// Horizontal line
+			ctx.lineTo(e.clientX - canvas.offsetLeft, lastY);
+		} else {
+			// Vertical line
+			ctx.lineTo(lastX, e.clientY - canvas.offsetTop);
+		}
+	} else {
+		// Normal line without Shift key
+		ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+	}
+
+	ctx.stroke();
+}
 function updateCircle(e) {
 	// Calculate the new circle parameters based on the mouse position
 	const newRadius = Math.sqrt(
@@ -205,6 +241,40 @@ function drawCircle(x, y, r) {
 	ctx.fill();
 	ctx.stroke();
 }
+function drawTriangle(e) {
+	if (!drawing) return;
+	ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+	restoreDrawingState(); // Restore the saved drawings
+
+	ctx.beginPath();
+	ctx.strokeStyle = strokeStyle;
+	ctx.lineWidth = lineWidth;
+	ctx.lineCap = "round";
+
+	const x1 = lastX;
+	const y1 = lastY;
+	const x2 = e.clientX - canvas.offsetLeft;
+	const y2 = e.clientY - canvas.offsetTop;
+
+	const centerX = (x1 + x2) / 2;
+	const centerY = (y1 + y2) / 2;
+
+	// Calculate the distance from the center to a vertex to make it equilateral
+	const sideLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+	const height = (Math.sqrt(3) / 2) * sideLength; // Height of an equilateral triangle
+
+	// Calculate the coordinates of the vertices
+	const x3 = centerX - sideLength / 2;
+	const y3 = centerY + height / 2;
+
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.lineTo(x3, y3);
+
+	ctx.closePath(); // Close the path to complete the triangle
+	ctx.stroke();
+}
+
 function drawRectangle(x1, y1, x2, y2) {
 	ctx.strokeStyle = strokeStyle;
 	ctx.lineWidth = lineWidth;
@@ -227,17 +297,33 @@ function updateRectangle(e) {
 	// Draw the updated rectangle
 	drawRectangle(startX, startY, x2, y2);
 }
+function saveDrawing() {
+	// Create a temporary anchor element
+	const downloadLink = document.createElement("a");
 
+	// Set the download attribute and create a data URL of the canvas content
+	downloadLink.download = "drawing.png";
+	downloadLink.href = canvas.toDataURL("image/png");
+
+	// Simulate a click on the anchor element to trigger the download
+	downloadLink.click();
+}
+
+// getting buttons
 const clearButton = document.getElementById("clearButton");
 const undoButton = document.getElementById("undoButton");
 const redoButton = document.getElementById("redoButton");
 const pencilButton = document.getElementById("pencilButton");
 const eraserButton = document.getElementById("eraserButton");
 const colorsButton = document.getElementById("colorsButton");
+const lineButton = document.getElementById("lineButton");
 const circleButton = document.getElementById("circleButton");
-const sizeSlider = document.getElementById("slider");
+const triangleButton = document.getElementById("triangleButton");
 const rectangleButton = document.getElementById("rectangleButton");
+const sizeSlider = document.getElementById("slider");
+const saveButton = document.getElementById("saveButton");
 
+// setting event handlers for the buttons
 clearButton.addEventListener("click", clearCanvas);
 undoButton.addEventListener("click", undo);
 redoButton.addEventListener("click", redo);
@@ -248,11 +334,19 @@ eraserButton.addEventListener("click", () => {
 	drawMode = "eraser";
 });
 colorsButton.addEventListener("input", (e) => colorChange(e));
+lineButton.addEventListener("click", () => {
+	drawMode = "line";
+	isCircleDrawing = false;
+});
 circleButton.addEventListener("click", () => {
 	drawMode = "circle";
+});
+triangleButton.addEventListener("click", () => {
+	drawMode = "triangle";
+	isCircleDrawing = false;
 });
 rectangleButton.addEventListener("click", () => {
 	drawMode = "rectangle";
 });
-
 sizeSlider.addEventListener("input", (e) => sizeChange(e));
+saveButton.addEventListener("click", saveDrawing);
