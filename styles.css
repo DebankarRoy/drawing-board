@@ -7,14 +7,16 @@
 	@apply flex flex-col justify-center items-center m-0 bg-gradient-to-br from-blue-900 via-indigo-700 to-sky-400 min-h-screen;
 }
 .toolbar-container {
-	@apply py-5 flex items-center m-4 gap-5 bg-white w-[1200px] rounded-xl justify-around select-none;
+	@apply py-5 xs:px-4 flex items-center m-4 gap-5 bg-white lg:max-w-[1200px] lg:w-[-webkit-fill-available] rounded-xl justify-around select-none xs:w-fit xs:flex-wrap;
 }
 .tools-item {
 	@apply flex flex-col justify-center items-center gap-2 font-bold;
 }
-
-canvas {
-	@apply rounded-xl shadow-xl;
+.tools-icons {
+	@apply md:h-[40px] md:w-[40px] cursor-pointer xs:h-[20px] xs:w-[20px];
+}
+.canvas {
+	@apply m-4 rounded-xl shadow-xl lg:max-w-[1200px] xs:w-[-webkit-fill-available] xs:h-[55vh];
 }
 .slider-container {
 	width: 80px;

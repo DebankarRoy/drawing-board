@@ -105,22 +105,23 @@ function saveDrawingState() {
 
 	drawingHistory.push(imageData);
 	historyIndex++;
+	console.log(historyIndex);
 }
 
 function clearCanvas() {
+	// Clear the canvas
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 	// Fill the canvas with white to clear the background
 	ctx.fillStyle = "white";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-	// Clone the canvas data before clearing
-	const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	clearHistory.push(imageData);
+	// Clear the history
+	drawingHistory.length = 0;
+	historyIndex = -1;
 
 	// Additional code to clear specific shapes if needed
 	// ...
-
-	// Redraw the saved drawings
-	restoreDrawingState();
 
 	// Save the initial state of the canvas again
 	saveDrawingState();
@@ -135,6 +136,7 @@ function restoreDrawingState() {
 }
 
 function undo() {
+	console.log(historyIndex);
 	if (historyIndex >= 0) {
 		// Move the current state to redo history
 		redoHistory.push(drawingHistory[historyIndex]);
@@ -350,3 +352,74 @@ rectangleButton.addEventListener("click", () => {
 });
 sizeSlider.addEventListener("input", (e) => sizeChange(e));
 saveButton.addEventListener("click", saveDrawing);
+canvas.addEventListener("touchstart", handleTouchStart);
+canvas.addEventListener("touchmove", handleTouchMove);
+canvas.addEventListener("touchend", handleTouchEnd);
+
+// Handle touch start
+function handleTouchStart(e) {
+	e.preventDefault(); // Prevent scrolling on touch devices
+	const touch = e.touches[0];
+	drawing = true;
+	[lastX, lastY] = [
+		touch.clientX - canvas.offsetLeft,
+		touch.clientY - canvas.offsetTop,
+	];
+
+	if (drawMode === "circle") {
+		isCircleDrawing = true;
+		centerX = lastX;
+		centerY = lastY;
+	} else if (drawMode === "rectangle") {
+		isRectangleDrawing = true;
+		startX = lastX;
+		startY = lastY;
+	}
+}
+
+// Handle touch move
+function handleTouchMove(e) {
+	if (!drawing) return;
+	e.preventDefault();
+	const touch = e.touches[0];
+	switch (drawMode) {
+		case "free":
+			drawFree(touch);
+			break;
+		case "circle":
+			if (strokeStyle === "white")
+				strokeStyle = document.getElementById("colorsButton").value;
+			if (isCircleDrawing) updateCircle(touch);
+			break;
+		case "rectangle":
+			if (strokeStyle === "white")
+				strokeStyle = document.getElementById("colorsButton").value;
+			if (isRectangleDrawing) updateRectangle(touch);
+			break;
+		case "eraser":
+			strokeStyle = "white";
+			drawFree(touch);
+			break;
+		case "line":
+			drawLine(touch);
+			break;
+		case "triangle":
+			drawTriangle(touch);
+			break;
+	}
+}
+
+// Handle touch end
+function handleTouchEnd() {
+	if (drawing) {
+		saveDrawingState();
+		drawing = false;
+
+		if (isCircleDrawing) {
+			isCircleDrawing = false;
+			// Draw the final circle and save it
+			drawCircleFinal();
+			saveDrawingState();
+		}
+	}
+}
